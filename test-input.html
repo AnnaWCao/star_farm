@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Input Test — Star Farm</title>
+    <style>
+        body {
+            font-family: -apple-system, sans-serif;
+            padding: 20px;
+            background: #fff8e7;
+        }
+        .test-bar {
+            width: 28.3972cm;
+            max-width: 95vw;
+            height: 2.5cm;
+            border: 2px solid #333;
+            background: #f0f0f0;
+            position: relative;
+            overflow: hidden;
+            touch-action: none;
+            cursor: pointer;
+            user-select: none;
+            -webkit-user-select: none;
+            -webkit-touch-callout: none;
+            margin: 20px 0;
+        }
+        .fill {
+            width: 0;
+            height: 100%;
+            background: linear-gradient(to right, #6fa8dc, #3498db);
+            transition: none;
+            pointer-events: none;
+        }
+        .info {
+            font-size: 16px;
+            color: #333;
+            margin-bottom: 10px;
+        }
+        .event-log {
+            background: white;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            font-family: monospace;
+            font-size: 12px;
+            height: 150px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+        }
+    </style>
+</head>
+<body>
+    <h1>Star Farm — Input Test</h1>
+    <p>Use this page to verify that the drag-to-respond mechanic works on your
+       target device. Drag across the bar with mouse or finger.</p>
+
+    <div class="info">Bar should render exactly 28.3972 cm wide (~11.18 inches).
+        Hold a ruler up to check. Current rendered width:
+        <span id="bar-width-cm">—</span> cm (<span id="bar-width-px">—</span> px).
+    </div>
+
+    <div class="info">Current response: <b id="response-value">0.00</b> / 100 units</div>
+
+    <div class="test-bar" id="test-bar">
+        <div class="fill" id="test-fill"></div>
+    </div>
+
+    <div class="info">Detected input method:
+        <b id="input-method">waiting for input...</b>
+    </div>
+
+    <div class="info">Event log (last 20 events):</div>
+    <div class="event-log" id="log"></div>
+
+    <script>
+        const bar = document.getElementById('test-bar');
+        const fill = document.getElementById('test-fill');
+        const responseValue = document.getElementById('response-value');
+        const inputMethodLabel = document.getElementById('input-method');
+        const log = document.getElementById('log');
+
+        // Report bar width
+        setTimeout(() => {
+            const rect = bar.getBoundingClientRect();
+            document.getElementById('bar-width-px').textContent = rect.width.toFixed(1);
+            document.getElementById('bar-width-cm').textContent =
+                (rect.width / 37.795).toFixed(2);
+        }, 100);
+
+        const logEvent = (msg) => {
+            const ts = performance.now().toFixed(0);
+            log.textContent = `[${ts}] ${msg}\n` + log.textContent;
+            // Keep only ~20 lines
+            const lines = log.textContent.split('\n');
+            if (lines.length > 25) {
+                log.textContent = lines.slice(0, 25).join('\n');
+            }
+        };
+
+        const updateFill = (clientX) => {
+            const rect = bar.getBoundingClientRect();
+            let x = clientX - rect.left;
+            x = Math.max(0, Math.min(x, rect.width));
+            fill.style.width = x + 'px';
+            responseValue.textContent = ((x / rect.width) * 100).toFixed(2);
+        };
+
+        let activeId = null;
+
+        if (window.PointerEvent) {
+            bar.addEventListener('pointerdown', (e) => {
+                if (activeId !== null) return;
+                activeId = e.pointerId;
+                bar.setPointerCapture(e.pointerId);
+                inputMethodLabel.textContent = `pointer event (type: ${e.pointerType})`;
+                logEvent(`pointerdown type=${e.pointerType} id=${e.pointerId}`);
+                updateFill(e.clientX);
+                e.preventDefault();
+            });
+            bar.addEventListener('pointermove', (e) => {
+                if (e.pointerId !== activeId) return;
+                updateFill(e.clientX);
+            });
+            bar.addEventListener('pointerup', (e) => {
+                if (e.pointerId !== activeId) return;
+                logEvent(`pointerup id=${e.pointerId}`);
+                bar.releasePointerCapture(e.pointerId);
+                activeId = null;
+            });
+            bar.addEventListener('pointercancel', (e) => {
+                if (e.pointerId !== activeId) return;
+                logEvent(`pointercancel id=${e.pointerId}`);
+                activeId = null;
+            });
+        } else {
+            inputMethodLabel.textContent = 'fallback (no pointer events)';
+            // Mouse fallback
+            let isDown = false;
+            bar.addEventListener('mousedown', (e) => {
+                isDown = true;
+                logEvent('mousedown');
+                updateFill(e.clientX);
+                e.preventDefault();
+            });
+            window.addEventListener('mousemove', (e) => {
+                if (isDown) updateFill(e.clientX);
+            });
+            window.addEventListener('mouseup', () => {
+                if (isDown) logEvent('mouseup');
+                isDown = false;
+            });
+            // Touch fallback
+            bar.addEventListener('touchstart', (e) => {
+                if (activeId !== null) return;
+                activeId = e.changedTouches[0].identifier;
+                logEvent(`touchstart id=${activeId}`);
+                updateFill(e.changedTouches[0].clientX);
+                e.preventDefault();
+            }, { passive: false });
+            bar.addEventListener('touchmove', (e) => {
+                for (const t of e.changedTouches) {
+                    if (t.identifier === activeId) {
+                        updateFill(t.clientX);
+                        e.preventDefault();
+                        break;
+                    }
+                }
+            }, { passive: false });
+            bar.addEventListener('touchend', (e) => {
+                for (const t of e.changedTouches) {
+                    if (t.identifier === activeId) {
+                        logEvent(`touchend id=${activeId}`);
+                        activeId = null;
+                        break;
+                    }
+                }
+            });
+        }
+    </script>
+</body>
+</html>

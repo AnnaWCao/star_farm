@@ -1,0 +1,80 @@
+/* css/styles.css */
+
+/* Base */
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background-color: #fff8e7;
+    margin: 0;
+    padding: 0;
+    -webkit-tap-highlight-color: transparent;
+    overscroll-behavior: none;
+}
+
+html {
+    touch-action: manipulation;  /* prevents double-tap zoom */
+}
+
+.jspsych-display-element {
+    font-size: 20px;
+}
+
+/* jsPsych button styling */
+.jspsych-btn {
+    font-family: inherit;
+    background-color: #27ae60;
+    color: white;
+    border: none;
+    border-radius: 10px;
+    padding: 14px 36px;
+    font-size: 22px;
+    margin: 12px;
+    cursor: pointer;
+    transition: transform 0.1s, background-color 0.2s;
+    touch-action: manipulation;
+    -webkit-user-select: none;
+    user-select: none;
+}
+
+.jspsych-btn:hover {
+    background-color: #2ecc71;
+}
+
+.jspsych-btn:active {
+    transform: scale(0.96);
+    background-color: #229954;
+}
+
+/* Drag-interactive areas: disable text selection and long-press menu */
+.interactive-drag-area {
+    -webkit-user-select: none;
+    user-select: none;
+    -webkit-touch-callout: none;
+    -webkit-tap-highlight-color: transparent;
+}
+
+/* Hide jsPsych progress bar */
+#jspsych-progressbar-container {
+    display: none;
+}
+
+/* Input elements (for startup form) should allow text selection */
+input, textarea, select {
+    -webkit-user-select: text;
+    user-select: text;
+    touch-action: manipulation;
+}
+
+/* Prevent iOS Safari auto-zoom on focused input (by ensuring font-size >= 16px) */
+input, textarea, select {
+    font-size: 16px;
+}
+
+/* Disable pull-to-refresh and bounce scrolling on iPad Safari */
+body {
+    overscroll-behavior-y: contain;
+    position: fixed;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    -webkit-overflow-scrolling: touch;
+}
