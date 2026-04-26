@@ -2,9 +2,7 @@
 // Factory that builds training and testing blocks for a given function
 // with a given visual skin.
 
-function buildFunctionBlock(functionDef, skin, functionIndex, participantInfo) {
-    // functionIndex: 1 or 2 (which function in the session)
-    // Returns a timeline (array) of trials: intro + training + break + testing
+function buildFunctionBlock(functionDef, skin, functionIndex) {
 
     const trials = [];
 
@@ -28,7 +26,7 @@ function buildFunctionBlock(functionDef, skin, functionIndex, participantInfo) {
             </div>
         `,
         choices: ['Ready!'],
-        button_html: '<button class="jspsych-btn" style="font-size:22px; padding:16px 40px;">%choice%</button>',
+        button_html: (choice) => `<button class="jspsych-btn" style="font-size:22px; padding:16px 40px;">${choice}</button>`,
         data: {
             task: 'function_intro',
             function_type: functionDef.name,
@@ -83,7 +81,7 @@ function buildFunctionBlock(functionDef, skin, functionIndex, participantInfo) {
             </div>
         `,
         choices: ['I\'m ready!'],
-        button_html: '<button class="jspsych-btn" style="font-size:22px; padding:16px 40px;">%choice%</button>',
+        button_html: (choice) => `<button class="jspsych-btn" style="font-size:22px; padding:16px 40px;">${choice}</button>`,
         data: {
             task: 'block_break',
             function_type: functionDef.name,

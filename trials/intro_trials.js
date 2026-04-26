@@ -4,23 +4,30 @@
 
 function buildIntroTrials() {
 
-    // Helper: one narrated page with a "next arrow" button
+    // Helper: one narrated page with a "next arrow" button, full-screen image
     const narratedPage = function(imagePath, audioPath, promptText) {
         return {
-            type: jsPsychImageButtonResponse,
-            stimulus: imagePath,
+            type: jsPsychHtmlButtonResponse,
+            stimulus: `
+                <img src="${imagePath}"
+                     style="width:100vw; height:85vh; object-fit:contain; display:block; margin:0;">
+                ${promptText ? `<div style="font-size:22px; text-align:center; padding:10px 20px;">${promptText}</div>` : ''}
+            `,
             choices: ['assets/images/next_button.png'],
-            button_html: '<img src="%choice%" style="height: 80px; cursor: pointer;">',
-            prompt: promptText ? `<div style="font-size:20px; margin-top:20px;">${promptText}</div>` : '',
-            stimulus_height: 500,
-            maintain_aspect_ratio: true,
+            button_html: (choice) => `<img src="${choice}" style="height:80px; cursor:pointer;">`,
             data: { task: 'intro', page: imagePath },
             on_start: function() {
-                // If audio is provided, play it via HTML5 audio
                 if (audioPath) {
                     const audio = new Audio(audioPath);
-                    audio.play().catch(e => console.log('Audio play failed (may need user gesture):', e));
+                    audio.play().catch(e => console.log('Audio play failed:', e));
                 }
+                // Strip jsPsych container padding so image can go edge-to-edge
+                const wrapper = document.querySelector('.jspsych-content-wrapper');
+                if (wrapper) wrapper.classList.add('fullscreen-slide');
+            },
+            on_finish: function() {
+                const wrapper = document.querySelector('.jspsych-content-wrapper');
+                if (wrapper) wrapper.classList.remove('fullscreen-slide');
             }
         };
     };

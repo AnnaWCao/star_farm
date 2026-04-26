@@ -18,6 +18,17 @@ html {
     font-size: 20px;
 }
 
+/* Full-screen intro slides: strip jsPsych's default container padding/max-width */
+.jspsych-content-wrapper.fullscreen-slide {
+    padding: 0 !important;
+}
+.jspsych-content-wrapper.fullscreen-slide .jspsych-content {
+    max-width: 100% !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    width: 100% !important;
+}
+
 /* jsPsych button styling */
 .jspsych-btn {
     font-family: inherit;

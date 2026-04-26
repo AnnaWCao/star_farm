@@ -36,30 +36,40 @@ const CONDITIONS = [
 const SKINS = [
     {
         id: "skin_A",
-        vine_image: "assets/images/vine1.png",
-        fertilizer_image: "assets/images/fertilizer_a.png",
-        fertilizer_name: "dax",            // nonce word, per your script
-        vine_color_label: "blue"
+        vine_image: "assets/images/green_vine.png",
+        fertilizer_image: "assets/images/green_fertilizer.png",
+        fertilizer_name: "dax",
+        vine_color_label: "green"
     },
     {
         id: "skin_B",
-        vine_image: "assets/images/vine2.png",
-        fertilizer_image: "assets/images/fertilizer_b.png",
-        fertilizer_name: "fep",            // a different nonce word for function 2
-        vine_color_label: "pink"
+        vine_image: "assets/images/brown_vine.png",
+        fertilizer_image: "assets/images/brown_fertilizer.png",
+        fertilizer_name: "fep",
+        vine_color_label: "brown"
     }
 ];
 
 // Assign a condition and counterbalancing given a participant ID.
 // Deterministic: same participant ID always gets same assignment.
-// Supply participant_id as an integer 1, 2, 3, ...
-function assignCondition(participant_id) {
+//
+// Optional overrides (set in the startup form):
+//   forced_condition_id: 1, 2, or 3 — skips the auto assignment for condition
+//   forced_order:        0 = function_1 first, 1 = function_2 first, null = auto
+//
+function assignCondition(participant_id, forced_condition_id = null, forced_order = null) {
     // 3 conditions × 2 orders × 2 skin assignments = 12 cells
     const cellIndex = (participant_id - 1) % 12;
 
-    const conditionIdx = Math.floor(cellIndex / 4);        // 0, 1, or 2
-    const orderIdx = Math.floor((cellIndex % 4) / 2);      // 0 or 1
-    const skinIdx = cellIndex % 2;                         // 0 or 1
+    // Condition: use override if provided, otherwise derive from cell
+    const conditionIdx = (forced_condition_id !== null)
+        ? forced_condition_id - 1                          // 1-indexed → 0-indexed
+        : Math.floor(cellIndex / 4);                       // 0, 1, or 2
+
+    const orderIdx = (forced_order !== null)
+        ? forced_order
+        : Math.floor((cellIndex % 4) / 2);                // 0 or 1
+    const skinIdx = cellIndex % 2;                         // 0 or 1 (always auto)
 
     const condition = CONDITIONS[conditionIdx];
 
@@ -91,6 +101,8 @@ function assignCondition(participant_id) {
         skin_1: skins_in_order[0],
         skin_2: skins_in_order[1],
         order_index: orderIdx,
-        skin_index: skinIdx
+        skin_index: skinIdx,
+        condition_was_forced: forced_condition_id !== null,
+        order_was_forced: forced_order !== null
     };
 }

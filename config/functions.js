@@ -178,25 +178,25 @@ function buildTestingTrials(functionDef) {
         });
     }
 
-    return jsPsych.randomization.shuffle(trials);
+    return shuffle(trials);
 }
 
-// Fisher-Yates shuffle with constraint: no consecutive identical x values
-function shuffleNoConsecutive(arr) {
-    let attempts = 0;
-    while (attempts < 1000) {
-        const shuffled = jsPsych.randomization.shuffle([...arr]);
-        let hasConsecutive = false;
-        for (let i = 1; i < shuffled.length; i++) {
-            if (shuffled[i].x === shuffled[i-1].x) {
-                hasConsecutive = true;
-                break;
-            }
-        }
-        if (!hasConsecutive) return shuffled;
-        attempts++;
+function shuffle(arr) {
+    const a = [...arr];
+    for (let i = a.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [a[i], a[j]] = [a[j], a[i]];
     }
-    // Fallback if constraint can't be met after 1000 tries
+    return a;
+}
+
+// Shuffle with constraint: no consecutive identical x values
+function shuffleNoConsecutive(arr) {
+    for (let attempts = 0; attempts < 1000; attempts++) {
+        const shuffled = shuffle(arr);
+        const hasConsecutive = shuffled.some((t, i) => i > 0 && t.x === shuffled[i-1].x);
+        if (!hasConsecutive) return shuffled;
+    }
     console.warn("Could not avoid consecutive repeats after 1000 attempts");
-    return jsPsych.randomization.shuffle([...arr]);
+    return shuffle(arr);
 }
