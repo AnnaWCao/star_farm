@@ -1,36 +1,41 @@
 // config/settings.js
-// Global settings for the Star Farm study.
 
+// ╔══════════════════════════════════════════════════════════════╗
+// ║  STUDY CONFIGURATION — change these settings between sessions ║
+// ╚══════════════════════════════════════════════════════════════╝
+
+// ── SWITCH 1: Stimuli set ──────────────────────────────────────
+// 'green'  → green seed + vine, fertilizer called "Dax"
+// 'brown'  → brown seed + vine, fertilizer called "Fep"
+const STIMULI_SET = 'green';
+
+// ── SWITCH 2: Function family to train and test this session ───
+// 'positive_linear'    y = 0.8x + 10
+// 'negative_linear'    y = −0.8x + 90
+// 'quadratic'          y = −0.036(x−50)² + 100
+// 'exponential_growth' y = 1.046^x + 10
+const FUNCTION_TO_TEST = 'positive_linear';
+
+// ── SWITCH 3: Training trial repetitions ──────────────────────
+// Each unique input is shown this many times (randomized, no consecutive repeats).
+// 10 unique inputs × TRAINING_REPS_PER_INPUT = total training trials.
+// Default: 2 → 20 training trials total.
+const TRAINING_REPS_PER_INPUT = 2;
+
+// ── SWITCH 4: Training and testing input/output values ─────────
+// Edit values directly in config/functions.js under:
+//   FUNCTIONS['positive_linear'].training.inputs  / .outputs
+//   FUNCTIONS['positive_linear'].testing.interpolation / .low_extrapolation / .high_extrapolation
+// (Replace 'positive_linear' with whichever function is being tested.)
+
+// ── Hardware / display (rarely changed) ───────────────────────
 const SETTINGS = {
-    // Physical bar length on the iPad screen.
-    // 28.3972 cm corresponds to 100 "units" in the function scale (0-100).
-    BAR_LENGTH_CM: 28.3972,
-    BAR_HEIGHT_CM: 2.5,
-
-    // If the rendered bar on your specific iPad doesn't measure 28.4 cm,
-    // adjust this multiplier. 1.0 = no correction.
-    // To calibrate: run the study, measure the bar, adjust so
-    //   rendered_cm = 28.3972 / measured_cm * old_calibration
-    CM_CALIBRATION: 1.0,
-
-    // Response feedback duration (ms) during training
-    FEEDBACK_DURATION_MS: 2500,
-
-    // Delay before feedback appears (for dramatic effect)
-    FEEDBACK_DELAY_MS: 500,
-
-    // Whether to show progress indicator ("Training trial 5 of 20")
-    SHOW_PROGRESS: true,
-
-    // Whether to back up each trial to localStorage (crash safety net)
-    SAVE_PER_TRIAL: true,
-
-    // Debug mode
-    DEBUG: false,
-
-    // Trial counts (for reference; actual counts driven by functions.js)
-    N_TRAINING_TRIALS: 20,
-    N_TESTING_INTERPOLATION: 4,
-    N_TESTING_LOW_EXTRAP: 4,
-    N_TESTING_HIGH_EXTRAP: 4,
+    BAR_LENGTH_CM:        28.3972,   // physical width of response bar on iPad
+    BAR_HEIGHT_CM:        2.5,
+    CM_CALIBRATION:       1.0,       // increase if bar measures longer than expected
+    FEEDBACK_DURATION_MS: 2500,      // how long correct-vine feedback is shown
+    FEEDBACK_DELAY_MS:    500,       // pause before feedback appears
+    SHOW_PROGRESS:        true,      // show "Training trial X of Y" counter
+    SAVE_PER_TRIAL:       true,      // backup each trial to localStorage
+    DEBUG:                false,
 };

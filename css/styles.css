@@ -1,6 +1,11 @@
 /* css/styles.css */
 
 /* Base */
+#jspsych-video-button-response-stimulus {
+    position: fixed; top: 0; left: 0;
+    width: 100vw; height: 100vh; object-fit: cover;
+}
+
 body {
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
     background-color: #fff8e7;
@@ -11,7 +16,9 @@ body {
 }
 
 html {
-    touch-action: manipulation;  /* prevents double-tap zoom */
+    touch-action: manipulation;
+    overscroll-behavior: none;
+    -webkit-overflow-scrolling: auto;
 }
 
 .jspsych-display-element {
@@ -23,10 +30,10 @@ html {
     padding: 0 !important;
 }
 .jspsych-content-wrapper.fullscreen-slide .jspsych-content {
-    max-width: 100% !important;
+    background: transparent;
+    max-width: none !important;
     padding: 0 !important;
     margin: 0 !important;
-    width: 100% !important;
 }
 
 /* jsPsych button styling */
