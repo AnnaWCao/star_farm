@@ -1,9 +1,13 @@
 /* css/styles.css */
 
 /* Base */
-#jspsych-video-button-response-stimulus {
-    position: fixed; top: 0; left: 0;
-    width: 100vw; height: 100vh; object-fit: cover;
+.jspsych-video-button-response-button-group,
+#jspsych-video-button-response-button-group {
+    position: fixed;
+    bottom: 30px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 10;
 }
 
 body {
@@ -13,6 +17,10 @@ body {
     padding: 0;
     -webkit-tap-highlight-color: transparent;
     overscroll-behavior: none;
+    position: fixed;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
 }
 
 html {
@@ -23,6 +31,76 @@ html {
 
 .jspsych-display-element {
     font-size: 20px;
+}
+
+/* Aspect-locked stage.
+   Every stimulus background + its overlays live inside .stage so that
+   percentage-positioned overlays (water bar, vine bar, fertilizer bar)
+   stay glued to features painted on the background image regardless of
+   viewport aspect ratio. Background image aspect: 2112 x 2833.
+   Videos share the same aspect (~0.745) so they slot into the same stage. */
+.stage {
+    position: fixed;
+    inset: 0;
+    margin: auto;
+    aspect-ratio: 2112 / 2833;
+    width:  min(100vw, calc(100vh * 2112 / 2833));
+    height: min(100vh, calc(100vw * 2833 / 2112));
+    background: #000;
+    overflow: hidden;
+}
+.stage-bg {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    display: block;
+    pointer-events: none;
+    user-select: none;
+    -webkit-user-drag: none;
+}
+
+/* Buttons that float inside the stage (next, OK). Sized with vmin so they
+   scale with the smaller viewport dimension; anchored to the stage corner. */
+/* ============================================================
+   NEXT / OK BUTTON STYLING
+   Used by every <button class="stage-btn"> in index.html.
+   - POSITION knobs:  see `bottom` / `right` below
+   - SIZE knob:       see `.stage-btn img { height: ... }` below
+   All hover / active / focus visual feedback is intentionally
+   suppressed so the button looks static (no color flash, no
+   scale on press, no halo). It is still clickable.
+   ============================================================ */
+.stage-btn,
+.stage-btn:hover,
+.stage-btn:active,
+.stage-btn:focus,
+.stage-btn:focus-visible {
+    position: absolute;
+    bottom: 5%;   /* ← POSITION: distance from bottom of stage (bigger = higher) */
+    right:  4%;   /* ← POSITION: distance from right edge  (bigger = farther left) */
+    background: none !important;
+    background-color: transparent !important;
+    border: none;
+    border-radius: 0;
+    padding: 0;
+    margin: 0;
+    box-shadow: none;
+    outline: none;
+    cursor: default;          /* no pointer-finger on hover */
+    transform: none;          /* no press-shrink animation */
+    transition: none;         /* no color fade-in/out */
+    -webkit-tap-highlight-color: transparent;  /* no tap flash on mobile */
+}
+.stage-btn img {
+    height: 20vmin;       /* ← SIZE: main knob. Bigger number = bigger button. */
+    min-height: 70px;     /* ← SIZE floor (tiny screens) */
+    max-height: 140px;    /* ← SIZE ceiling (large monitors) */
+    display: block;
+    pointer-events: none; /* clicks pass through to the parent button */
+    user-select: none;
+    -webkit-user-drag: none;
 }
 
 /* Full-screen intro slides: strip jsPsych's default container padding/max-width */
@@ -62,37 +140,35 @@ html {
     background-color: #229954;
 }
 
-/* Drag-interactive areas: disable text selection and long-press menu */
-.interactive-drag-area {
-    -webkit-user-select: none;
-    user-select: none;
-    -webkit-touch-callout: none;
-    -webkit-tap-highlight-color: transparent;
-}
-
 /* Hide jsPsych progress bar */
 #jspsych-progressbar-container {
     display: none;
 }
 
-/* Input elements (for startup form) should allow text selection */
+/* Video trials: jsPsych's video-button-response plugin doesn't accept a stage
+   wrapper, so we letterbox the video element to the same aspect-locked area
+   as .stage. All four study videos share ~0.745 aspect, so they slot in cleanly. */
+#jspsych-video-button-response-stimulus {
+    position: fixed;
+    inset: 0;
+    margin: auto;
+    width:  min(100vw, calc(100vh * 2112 / 2833));
+    height: min(100vh, calc(100vw * 2833 / 2112));
+    background: #000;
+    display: block;
+}
+#jspsych-video-button-response-stimulus video {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    display: block;
+    background: #000;
+}
+
+/* Startup-form inputs: 16px floor avoids iOS Safari auto-zoom on focus. */
 input, textarea, select {
     -webkit-user-select: text;
     user-select: text;
     touch-action: manipulation;
-}
-
-/* Prevent iOS Safari auto-zoom on focused input (by ensuring font-size >= 16px) */
-input, textarea, select {
     font-size: 16px;
-}
-
-/* Disable pull-to-refresh and bounce scrolling on iPad Safari */
-body {
-    overscroll-behavior-y: contain;
-    position: fixed;
-    width: 100%;
-    height: 100%;
-    overflow: auto;
-    -webkit-overflow-scrolling: touch;
 }
