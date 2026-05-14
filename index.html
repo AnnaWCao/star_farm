@@ -7,6 +7,7 @@
 
     <script src="https://unpkg.com/jspsych@8.0.0"></script>
     <link href="https://unpkg.com/jspsych@8.0.0/css/jspsych.css" rel="stylesheet" type="text/css" />
+    <script src="https://unpkg.com/@jspsych-contrib/plugin-pipe"></script>
 
     <script src="https://unpkg.com/@jspsych/plugin-html-button-response@2.1.0"></script>
     <script src="https://unpkg.com/@jspsych/plugin-video-button-response@2.1.1"></script>
@@ -20,12 +21,9 @@
 <script>
 
 var jsPsych = initJsPsych({
-    on_finish: function() {
-        // Triggers a CSV download in the browser containing all trial data.
-        // Filename includes the participant ID and function number for organization.
-        var fname = 'star_farm_p' + window._pid + '_fn' + window._fnNum + '.csv';
-        jsPsych.data.get().localSave('csv', fname);
-    }
+    //on_finish: function() {
+        
+    //}
 });
 
 const FUNCTION_BY_NUMBER = {
@@ -111,7 +109,10 @@ function runExperiment(pid, age, fnNum) {
 
     var timeline = [];
 
-    jsPsych.data.addProperties({ pid: pid, age: age, function_number: fnNum });
+    const subject_id = jsPsych.randomization.randomID(10);
+    const filename = `${subject_id}.csv`;
+
+    jsPsych.data.addProperties({ subject_id: subject_id, pid: pid, age: age, function_number: fnNum });
 
     // HELPER FUNCTIONS
 
@@ -874,6 +875,27 @@ function buildResponseTrial(opts) {
         response_allowed_while_playing: false,
         };
     timeline.push(end_1);
+
+
+
+
+    var save_data = {
+    type: jsPsychPipe,
+    action: "save",
+    experiment_id: "0PFfezGea2Xb",  
+    filename: filename,
+    data_string: () => jsPsych.data.get().csv()
+};
+timeline.push(save_data);
+
+
+
+timeline.push({
+    type: jsPsychHtmlButtonResponse,
+    stimulus: '<div style="padding:60px;text-align:center;font-size:32px;">' +
+              '✓ Session complete!<br><br>Data has been saved.</div>',
+    choices: ['Done']
+});
 
 
 
