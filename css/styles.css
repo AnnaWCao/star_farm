@@ -44,8 +44,8 @@ html {
     inset: 0;
     margin: auto;
     aspect-ratio: 2112 / 2833;
-    width:  min(100vw, calc(100vh * 2112 / 2833));
-    height: min(100vh, calc(100vw * 2833 / 2112));
+    width:  min(100dvw, calc(100dvh * 2112 / 2833));
+    height: min(100dvh, calc(100dvw * 2833 / 2112));
     background: #fff8e7;
     overflow: hidden;
 }
@@ -153,8 +153,8 @@ button.stage-btn:focus-visible {
     position: fixed;
     inset: 0;
     margin: auto;
-    width:  min(100vw, calc(100vh * 2112 / 2833));
-    height: min(100vh, calc(100vw * 2833 / 2112));
+    width:  min(100dvw, calc(100dvh * 2112 / 2833));
+    height: min(100dvh, calc(100dvw * 2833 / 2112));
     background: #fff8e7;
     display: block;
 }
