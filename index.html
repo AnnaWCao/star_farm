@@ -107,6 +107,13 @@ document.getElementById('start-btn').addEventListener('click', function() {
 // MAIN EXPERIMENT
 function runExperiment(pid, age, fnNum) {
 
+    // Persistent backdrop appended to body (outside jsPsych's display element)
+    // so it is never cleared during inter-trial transitions, preventing the
+    // black flash that appears when the stage compositing layer is rebuilt.
+    var backdrop = document.createElement('div');
+    backdrop.style.cssText = 'position:fixed;inset:0;background:#fff8e7;z-index:-1;';
+    document.body.appendChild(backdrop);
+
     var timeline = [];
 
     const subject_id = jsPsych.randomization.randomID(10);
@@ -405,7 +412,7 @@ function buildResponseTrial(opts) {
                     // No transition for the initial state — set instantly.
                     guessVine.style.transition = 'none';
                     guessVine.style.clipPath = 'inset(' + (100 - responsePct) + '% 0 0 0)';
-                    marker.style.bottom = responsePct + '%';
+                    marker.style.bottom = trueOutput + '%';
                     guessVine.offsetHeight;  // force browser repaint before next step
 
                     // Play Training_2: "Nice guess! Your guess is this red mark here..."

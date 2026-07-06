@@ -46,7 +46,7 @@ html {
     aspect-ratio: 2112 / 2833;
     width:  min(100vw, calc(100vh * 2112 / 2833));
     height: min(100vh, calc(100vw * 2833 / 2112));
-    background: #000;
+    background: #fff8e7;
     overflow: hidden;
 }
 .stage-bg {
@@ -155,7 +155,7 @@ button.stage-btn:focus-visible {
     margin: auto;
     width:  min(100vw, calc(100vh * 2112 / 2833));
     height: min(100vh, calc(100vw * 2833 / 2112));
-    background: #000;
+    background: #fff8e7;
     display: block;
 }
 #jspsych-video-button-response-stimulus video {
@@ -163,7 +163,7 @@ button.stage-btn:focus-visible {
     height: 100%;
     object-fit: contain;
     display: block;
-    background: #000;
+    background: #fff8e7;
 }
 
 /* Startup-form inputs: 16px floor avoids iOS Safari auto-zoom on focus. */
