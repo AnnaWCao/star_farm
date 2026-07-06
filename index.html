@@ -845,12 +845,25 @@ function buildResponseTrial(opts) {
         stimulus: '<div class="stage">' +
                   '<img class="stage-bg" src="' + TRAINING_BG + '"></div>',
         choices: ['next'],
-        button_html: nextBtnHtml,
+        button_html: function() {
+            return '<button id="testing-intro-next-btn" class="jspsych-btn stage-btn" ' +
+                   'style="display:none;">' +
+                   '<img src="assets/images/next_button.png"></button>';
+        },
         data: { task: 'fun_2_testing_intro' },
         on_load: function() {
-            playAudio('assets/audio/Training_6.m4a');
             positionBtnGrp();
-            addBtnSound();
+            var nextBtn = document.getElementById('testing-intro-next-btn');
+            var audio = playAudio('assets/audio/Training_6.m4a');
+            audio.addEventListener('ended', function() {
+                if (nextBtn) {
+                    nextBtn.style.display = 'inline-block';
+                    nextBtn.addEventListener('click', function() {
+                        stopAllAudio();
+                        playAudio('assets/audio/button_click.mp3');
+                    });
+                }
+            });
         },
         on_finish: function() { stopAllAudio(); }
     });

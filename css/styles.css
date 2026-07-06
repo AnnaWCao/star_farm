@@ -72,13 +72,13 @@ html {
    suppressed so the button looks static (no color flash, no
    scale on press, no halo). It is still clickable.
    ============================================================ */
-.stage-btn,
-.stage-btn:hover,
-.stage-btn:active,
-.stage-btn:focus,
-.stage-btn:focus-visible {
+button.stage-btn,
+button.stage-btn:hover,
+button.stage-btn:active,
+button.stage-btn:focus,
+button.stage-btn:focus-visible {
     position: absolute;
-    bottom: 5%;   /* ← POSITION: distance from bottom of stage (bigger = higher) */
+    bottom: 8%;   /* ← POSITION: distance from bottom of stage (bigger = higher) */
     right:  4%;   /* ← POSITION: distance from right edge  (bigger = farther left) */
     background: none !important;
     background-color: transparent !important;
@@ -88,13 +88,15 @@ html {
     margin: 0;
     box-shadow: none;
     outline: none;
-    cursor: default;          /* no pointer-finger on hover */
-    transform: none;          /* no press-shrink animation */
-    transition: none;         /* no color fade-in/out */
-    -webkit-tap-highlight-color: transparent;  /* no tap flash on mobile */
+    cursor: default;
+    transform: none;
+    transition: none;
+    -webkit-appearance: none;
+    appearance: none;
+    -webkit-tap-highlight-color: transparent;
 }
 .stage-btn img {
-    height: 20vmin;       /* ← SIZE: main knob. Bigger number = bigger button. */
+    height: 15vmin;       /* ← SIZE: main knob. Bigger number = bigger button. */
     min-height: 70px;     /* ← SIZE floor (tiny screens) */
     max-height: 140px;    /* ← SIZE ceiling (large monitors) */
     display: block;
@@ -125,7 +127,7 @@ html {
     font-size: 22px;
     margin: 12px;
     cursor: pointer;
-    transition: transform 0.1s, background-color 0.2s;
+    transition: background-color 0.2s;
     touch-action: manipulation;
     -webkit-user-select: none;
     user-select: none;
@@ -136,7 +138,6 @@ html {
 }
 
 .jspsych-btn:active {
-    transform: scale(0.96);
     background-color: #229954;
 }
 
