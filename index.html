@@ -22,8 +22,9 @@
 <script>
 
 var jsPsych = initJsPsych({
+    override_safe_mode: true
     //on_finish: function() {
-        
+
     //}
 });
 
@@ -47,7 +48,7 @@ document.body.innerHTML = `
 
         <div style="margin:24px 0;">
             <label style="display:block; font-weight:bold; font-size:20px; margin-bottom:8px;">Participant ID:</label>
-            <input type="number" id="pid-input" min="1" step="1"
+            <input type="text" id="pid-input"
                    style="width:100%; padding:18px; font-size:22px; box-sizing:border-box;
                           border:1px solid #ccc; border-radius:8px;">
         </div>
@@ -85,12 +86,12 @@ if (params.get('age')) document.getElementById('age-input').value      = params.
 if (params.get('fn'))  document.getElementById('function-input').value = params.get('fn');
 
 document.getElementById('start-btn').addEventListener('click', function() {
-    var pid   = parseInt(document.getElementById('pid-input').value);
+    var pid   = document.getElementById('pid-input').value.trim();
     var age   = parseFloat(document.getElementById('age-input').value);
     var fnNum = parseInt(document.getElementById('function-input').value);
     var err   = document.getElementById('form-error');
 
-    if (!pid || pid < 1) { err.textContent = 'Enter a valid Participant ID.'; return; }
+    if (!pid) { err.textContent = 'Enter a Participant ID.'; return; }
     if (!age || age < 3 || age > 12) { err.textContent = 'Enter a valid age (3–12).'; return; }
     if (!fnNum || fnNum < 1 || fnNum > 4) {
         err.textContent = 'Enter a Function number (1, 2, 3, or 4).'; return;
@@ -417,7 +418,7 @@ function buildResponseTrial(opts) {
                     guessVine.offsetHeight;  // force browser repaint before next step
 
                     // Play Training_2: "Nice guess! Your guess is this red mark here..."
-                    playAudio('assets/audio/Training_2.mp3');
+                    playAudio('assets/audio/Training_2.m4a');
 
                     // Fade in the red dashed marker line over 300ms
                     setTimeout(function() { marker.style.opacity = '1'; }, 300);
@@ -480,6 +481,7 @@ function buildResponseTrial(opts) {
             'assets/videos/CFL1_intro2.mp4',
             'assets/videos/CFL1_intro4.mp4',
             'assets/videos/CFL1_intro6.mp4',
+            'assets/videos/Transition.mp4',
             'assets/videos/CFL1_end1.mp4'
         ],
         show_progress_bar: true,
@@ -540,7 +542,7 @@ function buildResponseTrial(opts) {
                 position: absolute;
                 left:   8%;
                 right:  15%;
-                bottom:  1.25%;
+                bottom:  1.27%;
                 width:  90%;
                 height: 3.8%;
                 cursor: pointer;
@@ -548,7 +550,7 @@ function buildResponseTrial(opts) {
                 user-select: none;
                 -webkit-user-select: none;
                 overflow: hidden;
-                outline: 2px dashed #ff2d2d;
+                outline: none;
             ">
             <div id="water-fill" style="
                 position: absolute;
@@ -688,7 +690,7 @@ function buildResponseTrial(opts) {
                 user-select: none;
                 -webkit-user-select: none;
                 overflow: hidden;
-                outline: 2px dashed #ff2d2d;
+                outline: none;
             ">
             <div id="water-fill" style="
                 position: absolute;
@@ -825,7 +827,7 @@ function buildResponseTrial(opts) {
     };
     var FERT_POSITION = {          // horizontal fertilizer bar (auto-fill)
         fert_left:   '8%',
-        fert_bottom: '1.25%',
+        fert_bottom: '1.27%',
         fert_width:  '90%',
         fert_height: '3.8%'
     };
@@ -854,32 +856,14 @@ function buildResponseTrial(opts) {
     }
 
 
-    // TESTING PHASE
+    // TESTING PHASE — transition video plays automatically, then testing trials begin
     timeline.push({
-        type: jsPsychHtmlButtonResponse,
-        stimulus: '<div class="stage">' +
-                  '<img class="stage-bg" src="' + TRAINING_BG + '"></div>',
-        choices: ['next'],
-        button_html: function() {
-            return '<button id="testing-intro-next-btn" class="jspsych-btn stage-btn" ' +
-                   'style="display:none;">' +
-                   '<img src="assets/images/next_button.png"></button>';
-        },
+        type: jsPsychVideoButtonResponse,
+        stimulus: ['assets/videos/Transition.mp4'],
+        choices: [],
+        trial_ends_after_video: true,
+        response_allowed_while_playing: false,
         data: { task: 'fun_2_testing_intro' },
-        on_load: function() {
-            positionBtnGrp();
-            var nextBtn = document.getElementById('testing-intro-next-btn');
-            var audio = playAudio('assets/audio/Training_6.m4a');
-            audio.addEventListener('ended', function() {
-                if (nextBtn) {
-                    nextBtn.style.display = 'inline-block';
-                    nextBtn.addEventListener('click', function() {
-                        stopAllAudio();
-                        playAudio('assets/audio/button_click.mp3');
-                    });
-                }
-            });
-        },
         on_finish: function() { stopAllAudio(); }
     });
 
