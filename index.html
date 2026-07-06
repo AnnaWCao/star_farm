@@ -12,6 +12,7 @@
     <script src="https://unpkg.com/@jspsych/plugin-html-button-response@2.1.0"></script>
     <script src="https://unpkg.com/@jspsych/plugin-video-button-response@2.1.1"></script>
     <script src="https://unpkg.com/@jspsych/plugin-preload@2.1.0"></script>
+    <script src="https://unpkg.com/@jspsych/plugin-fullscreen@2.0.0"></script>
 
     <script src="config/functions.js"></script>
 
@@ -487,7 +488,14 @@ function buildResponseTrial(opts) {
     };
     timeline.push(preload);
 
-
+    // FULLSCREEN — experimenter clicks once to hide browser chrome before child sees anything
+    timeline.push({
+        type: jsPsychFullscreen,
+        fullscreen_mode: true,
+        message: '<div style="padding:60px;text-align:center;font-size:28px;font-family:-apple-system,sans-serif;">' +
+                 '<p style="margin-bottom:32px;">Click the button below to enter fullscreen before handing the device to the child.</p></div>',
+        button_label: 'Enter Fullscreen'
+    });
 
     // FAMILIARIZATION PHASE
 
