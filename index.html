@@ -22,9 +22,8 @@
 <script>
 
 var jsPsych = initJsPsych({
-    override_safe_mode: true
     //on_finish: function() {
-
+        
     //}
 });
 
@@ -417,9 +416,6 @@ function buildResponseTrial(opts) {
                     marker.style.bottom = trueOutput + '%';
                     guessVine.offsetHeight;  // force browser repaint before next step
 
-                    // Play Training_2: "Nice guess! Your guess is this red mark here..."
-                    playAudio('assets/audio/Training_2.m4a');
-
                     // Fade in the red dashed marker line over 300ms
                     setTimeout(function() { marker.style.opacity = '1'; }, 300);
 
@@ -481,7 +477,6 @@ function buildResponseTrial(opts) {
             'assets/videos/CFL1_intro2.mp4',
             'assets/videos/CFL1_intro4.mp4',
             'assets/videos/CFL1_intro6.mp4',
-            'assets/videos/Transition.mp4',
             'assets/videos/CFL1_end1.mp4'
         ],
         show_progress_bar: true,
@@ -856,14 +851,49 @@ function buildResponseTrial(opts) {
     }
 
 
-    // TESTING PHASE — transition video plays automatically, then testing trials begin
+    // TESTING PHASE
     timeline.push({
-        type: jsPsychVideoButtonResponse,
-        stimulus: ['assets/videos/Transition.mp4'],
-        choices: [],
-        trial_ends_after_video: true,
-        response_allowed_while_playing: false,
+        type: jsPsychHtmlButtonResponse,
+        stimulus: '<div class="stage">' +
+                  '<img class="stage-bg" src="' + TRAINING_BG + '"></div>',
+        choices: ['next'],
+        button_html: function() {
+            return '<button id="testing-intro-next-btn" class="jspsych-btn stage-btn" ' +
+                   'style="display:none;">' +
+                   '<img src="assets/images/next_button.png"></button>';
+        },
         data: { task: 'fun_2_testing_intro' },
+        on_load: function() {
+            // Same pattern as training/feedback trials: static positioning so that
+            // the button's own "position:absolute; bottom:8%; right:4%" is resolved
+            // relative to the stage, not the button group.
+            var stage  = document.querySelector('.stage');
+            var btnGrp = document.getElementById('jspsych-html-button-response-btngroup');
+            if (stage && btnGrp && btnGrp.parentElement !== stage) {
+                stage.appendChild(btnGrp);
+                btnGrp.style.position = 'static';
+                btnGrp.style.margin   = '0';
+            }
+            var nextBtn = document.getElementById('testing-intro-next-btn');
+            var audio   = playAudio('assets/audio/Training_6.m4a');
+
+            var revealed = false;
+            function revealBtn() {
+                if (revealed) return;
+                revealed = true;
+                if (nextBtn) {
+                    nextBtn.style.display = 'inline-block';
+                    nextBtn.addEventListener('click', function() {
+                        stopAllAudio();
+                        playAudio('assets/audio/button_click.mp3');
+                    });
+                }
+            }
+            // Primary trigger: audio finished
+            audio.addEventListener('ended', revealBtn);
+            // Fallback: if audio fails to load/play, reveal button anyway
+            audio.addEventListener('error', revealBtn);
+        },
         on_finish: function() { stopAllAudio(); }
     });
 
@@ -894,9 +924,12 @@ function buildResponseTrial(opts) {
     var save_data = {
     type: jsPsychPipe,
     action: "save",
-    experiment_id: "0PFfezGea2Xb",  
+    experiment_id: "0PFfezGea2Xb",
     filename: filename,
-    data_string: () => jsPsych.data.get().csv()
+    data_string: () => {
+        jsPsych.data.addProperties({ study_completion_timestamp: new Date().toISOString() });
+        return jsPsych.data.get().csv();
+    }
 };
 timeline.push(save_data);
 

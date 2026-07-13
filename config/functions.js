@@ -1,6 +1,9 @@
-// Training grid: 8 equidistant points spanning 17..83 (step = 66/7)
-// Rounds:  R1 low->high | R2 high->low | R3 outside-in (lo,hi,2nd-lo,2nd-hi,...)
-// Testing: 12 equidistant points covering 1..99 (step = 98/11); none coincide with training
+// Fn 1,2,4 — Training grid: 8 equidistant points spanning 17..83 (step = 66/7)
+//            Rounds: R1 low->high | R2 high->low | R3 outside-in (lo,hi,2nd-lo,2nd-hi,...)
+//            Testing: 12 equidistant points covering 1..99 (step = 98/11); none coincide with training
+// Fn 3      — Training grid: 12 equidistant points spanning 15..85 (step = 70/11), 48 trials
+//            Rounds: R1 increase | R2 pairs outside-in | R3 pairs inside-out | R4 increase
+//            Testing: same 12 points covering 1..99, presented in randomized order
 // Inputs are identical across all functions; outputs computed from the exact (unrounded) inputs.
 
 const FUNCTIONS = {
@@ -38,12 +41,25 @@ const FUNCTIONS = {
         label: "Quadratic (inverted U)",
         formula: "y = -0.036(x-50)^2 + 100",
         training: {
-            inputs:  [17.00, 26.43, 35.86, 45.29, 54.71, 64.14, 73.57, 83.00, 83.00, 73.57, 64.14, 54.71, 45.29, 35.86, 26.43, 17.00, 17.00, 83.00, 26.43, 73.57, 35.86, 64.14, 45.29, 54.71],
-            outputs: [60.80, 80.00, 92.80, 99.20, 99.20, 92.80, 80.00, 60.80, 60.80, 80.00, 92.80, 99.20, 99.20, 92.80, 80.00, 60.80, 60.80, 60.80, 80.00, 80.00, 92.80, 92.80, 99.20, 99.20]
+            // 12 pts spanning 15..85 (step=70/11) × 4 rounds = 48 trials
+            // R1: increase | R2: outside-in pairs | R3: inside-out pairs | R4: increase
+            inputs:  [
+                15.00, 21.36, 27.73, 34.09, 40.45, 46.82, 53.18, 59.55, 65.91, 72.27, 78.64, 85.00,
+                15.00, 85.00, 21.36, 78.64, 27.73, 72.27, 34.09, 65.91, 40.45, 59.55, 46.82, 53.18,
+                46.82, 53.18, 40.45, 59.55, 34.09, 65.91, 27.73, 72.27, 21.36, 78.64, 15.00, 85.00,
+                15.00, 21.36, 27.73, 34.09, 40.45, 46.82, 53.18, 59.55, 65.91, 72.27, 78.64, 85.00
+            ],
+            outputs: [
+                55.90, 70.47, 82.15, 90.89, 96.72, 99.64, 99.64, 96.72, 90.89, 82.15, 70.47, 55.90,
+                55.90, 55.90, 70.47, 70.47, 82.15, 82.15, 90.89, 90.89, 96.72, 96.72, 99.64, 99.64,
+                99.64, 99.64, 96.72, 96.72, 90.89, 90.89, 82.15, 82.15, 70.47, 70.47, 55.90, 55.90,
+                55.90, 70.47, 82.15, 90.89, 96.72, 99.64, 99.64, 96.72, 90.89, 82.15, 70.47, 55.90
+            ]
         },
         testing: {
-            inputs:  [1.00, 9.91, 18.82, 27.73, 36.64, 45.55, 54.45, 63.36, 72.27, 81.18, 90.09, 99.00],
-            outputs: [13.56, 42.14, 65.00, 82.14, 93.57, 99.29, 99.29, 93.57, 82.14, 65.00, 42.14, 13.56]
+            // Same 12 points as other functions; randomized order to prevent trajectory tracking
+            inputs:  [45.55, 18.82, 72.27,  1.00, 63.36, 90.09, 27.73, 81.18, 36.64,  9.91, 99.00, 54.45],
+            outputs: [99.29, 65.00, 82.15, 13.56, 93.57, 42.14, 82.15, 65.00, 93.57, 42.14, 13.56, 99.29]
         }
     },
 
