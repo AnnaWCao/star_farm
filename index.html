@@ -433,7 +433,11 @@ function buildResponseTrial(opts) {
                         if (nextBtn) {
                             nextBtn.style.display = 'inline-block';
                             nextBtn.addEventListener('click', function() {
-                                stopAllAudio();
+                                // Do NOT call stopAllAudio() here — by the time this listener
+                                // fires, jsPsych's own click handler has already run on_finish
+                                // (which stops the current trial's audio) and started the next
+                                // trial's on_load (which plays fertilizer.mp3).  Calling
+                                // stopAllAudio() here would kill that sound immediately.
                                 playAudio('assets/audio/button_click.mp3');
                             });
                         }
@@ -874,24 +878,28 @@ function buildResponseTrial(opts) {
                 btnGrp.style.position = 'static';
                 btnGrp.style.margin   = '0';
             }
-            var nextBtn = document.getElementById('testing-intro-next-btn');
             var audio   = playAudio('assets/audio/Training_6.m4a');
 
             var revealed = false;
             function revealBtn() {
                 if (revealed) return;
                 revealed = true;
-                if (nextBtn) {
-                    nextBtn.style.display = 'inline-block';
-                    nextBtn.addEventListener('click', function() {
-                        stopAllAudio();
+                // getElementById can fail if jsPsych sanitizes id attributes; fall back to
+                // any button inside the stage or button group.
+                var btn = document.getElementById('testing-intro-next-btn') ||
+                          document.querySelector('.stage button') ||
+                          document.querySelector('#jspsych-html-button-response-btngroup button');
+                if (btn) {
+                    btn.style.display = 'inline-block';
+                    btn.addEventListener('click', function() {
+                        // Same rule as feedback nextBtn: don't stopAllAudio here.
                         playAudio('assets/audio/button_click.mp3');
                     });
                 }
             }
             audio.addEventListener('ended', revealBtn);
             audio.addEventListener('error', revealBtn);
-            // Hard fallback: reveal button after 15 s regardless
+            // Hard fallback: if audio was stopped before ending, reveal after 15 s
             setTimeout(revealBtn, 15000);
         },
         on_finish: function() { stopAllAudio(); }
