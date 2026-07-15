@@ -374,7 +374,12 @@ function buildResponseTrial(opts) {
                         '<img id="true-vine" src="' + FILL_IMAGE + '" style="' +
                             'position:absolute;left:0;top:0;width:100%;height:100%;' +
                             'clip-path:inset(100% 0 0 0);pointer-events:none;">' +
-                        // Red dashed marker line at the participant's guess height.
+                        // Gray dashed marker at the participant's response height (locked from response trial).
+                        '<div id="fb-guess-marker" style="position:absolute;' +
+                            'left:-50%;right:-50%;bottom:0%;height:0;' +
+                            'border-top:4px dashed rgba(80,80,80,0.75);opacity:0;' +
+                            'pointer-events:none;"></div>' +
+                        // Red dashed marker line at the correct output height.
                         // Negative left/right extends it just past the bar edges.
                         '<div id="fb-marker" style="position:absolute;' +
                             'left:-50%;right:-50%;bottom:0%;height:0;' +
@@ -399,10 +404,11 @@ function buildResponseTrial(opts) {
             // the trial is built, so the on_load callback can use them later.
             on_load: (function(trueOutput, finalAudio) {
                 return function() {
-                    var guessVine = document.getElementById('guess-vine');
-                    var trueVine  = document.getElementById('true-vine');
-                    var marker    = document.getElementById('fb-marker');
-                    var nextBtn   = document.getElementById('fb-next-btn');
+                    var guessVine    = document.getElementById('guess-vine');
+                    var trueVine     = document.getElementById('true-vine');
+                    var marker       = document.getElementById('fb-marker');
+                    var guessMarker  = document.getElementById('fb-guess-marker');
+                    var nextBtn      = document.getElementById('fb-next-btn');
 
                     // Anchor the button group inside the stage.
                     var stage = document.querySelector('.stage');
@@ -417,11 +423,16 @@ function buildResponseTrial(opts) {
                     var responsePct = (typeof window._lastResponsePct === 'number')
                                       ? window._lastResponsePct : 0;
 
-                    // ---- Phase 1: show guess + marker ----
+                    // ---- Phase 1: show guess + markers ----
                     // No transition for the initial state — set instantly.
                     guessVine.style.transition = 'none';
                     guessVine.style.clipPath = 'inset(' + (100 - responsePct) + '% 0 0 0)';
                     marker.style.bottom = trueOutput + '%';
+                    // Gray marker appears immediately at the locked response height.
+                    if (guessMarker) {
+                        guessMarker.style.bottom  = responsePct + '%';
+                        guessMarker.style.opacity = '1';
+                    }
                     guessVine.offsetHeight;  // force browser repaint before next step
 
                     // Fade in the red dashed marker line over 300ms
