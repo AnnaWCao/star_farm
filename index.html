@@ -208,6 +208,10 @@ function buildResponseTrial(opts) {
                         '<img id="vine-fill" src="' + FILL_IMAGE + '" style="' +
                             'position:absolute;left:0;top:0;width:100%;height:100%;' +
                             'clip-path:inset(100% 0 0 0);pointer-events:none;">' +
+                        '<div id="response-marker" style="position:absolute;' +
+                            'left:-50%;right:-50%;bottom:0%;height:0;' +
+                            'border-top:4px dashed rgba(80,80,80,0.75);opacity:0;' +
+                            'pointer-events:none;"></div>' +
                     '</div>' +
                 '</div>',
             choices: ['OK'],
@@ -224,10 +228,11 @@ function buildResponseTrial(opts) {
             },
 
             on_load: function() {
-                var track    = document.getElementById('vine-bar-track');
-                var fill     = document.getElementById('vine-fill');
-                var fertFill = document.getElementById('fert-fill');
-                var okBtn    = document.getElementById('ok-btn');
+                var track          = document.getElementById('vine-bar-track');
+                var fill           = document.getElementById('vine-fill');
+                var fertFill       = document.getElementById('fert-fill');
+                var okBtn          = document.getElementById('ok-btn');
+                var responseMarker = document.getElementById('response-marker');
 
                 // Move jsPsych's button group into the stage so OK rides with the scene.
                 var stage = document.querySelector('.stage');
@@ -269,10 +274,13 @@ function buildResponseTrial(opts) {
                     responsePct = (y / rect.height) * 100;
                     // clip-path inset(top right bottom left): shrinking top reveals the image
                     fill.style.clipPath = 'inset(' + (100 - responsePct) + '% 0 0 0)';
+                    // Gray marker tracks the vine top (bottom = responsePct% from bar bottom)
+                    if (responseMarker) responseMarker.style.bottom = responsePct + '%';
                     if (!hasInteracted) {
                         hasInteracted = true;
                         firstMoveTs = performance.now() - startTs;
                         if (okBtn) okBtn.style.display = 'inline-block';
+                        if (responseMarker) responseMarker.style.opacity = '1';
                     }
                 }
 
