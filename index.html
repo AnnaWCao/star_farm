@@ -301,10 +301,12 @@ function buildResponseTrial(opts) {
                 track.addEventListener('pointercancel', function() { dragging = false; });
 
                 // OK click sound (jsPsych handles trial advance itself).
-                // Stop any in-flight instruction audio before playing the click.
+                // Do NOT call stopAllAudio() here — same reason as feedback nextBtn:
+                // by the time this listener fires, jsPsych's handler has already run
+                // on_finish (stops current audio) and started the next trial's on_load
+                // (which may play audio immediately, e.g. Training_2 on first trial).
                 if (okBtn) {
                     okBtn.addEventListener('click', function() {
-                        stopAllAudio();
                         playAudio('assets/audio/ok_button_click.mp3');
                     });
                 }
@@ -400,9 +402,10 @@ function buildResponseTrial(opts) {
                 trial_index: opts.trial_index
             },
 
-            // Closure captures opts.true_output and opts.final_audio at the time
-            // the trial is built, so the on_load callback can use them later.
-            on_load: (function(trueOutput, finalAudio) {
+            // Closure captures true_output, intro_audio, and final_audio at build time.
+            // intro_audio is only set on the very first training feedback trial; when
+            // present it plays first, then the vine grows, then final_audio plays.
+            on_load: (function(trueOutput, introAudio, finalAudio) {
                 return function() {
                     var guessVine    = document.getElementById('guess-vine');
                     var trueVine     = document.getElementById('true-vine');
@@ -423,47 +426,47 @@ function buildResponseTrial(opts) {
                     var responsePct = (typeof window._lastResponsePct === 'number')
                                       ? window._lastResponsePct : 0;
 
-                    // ---- Phase 1: show guess + markers ----
-                    // No transition for the initial state — set instantly.
+                    // ---- Phase 1: show frozen guess vine + markers instantly ----
                     guessVine.style.transition = 'none';
                     guessVine.style.clipPath = 'inset(' + (100 - responsePct) + '% 0 0 0)';
                     marker.style.bottom = trueOutput + '%';
-                    // Gray marker appears immediately at the locked response height.
                     if (guessMarker) {
                         guessMarker.style.bottom  = responsePct + '%';
                         guessMarker.style.opacity = '1';
                     }
-                    guessVine.offsetHeight;  // force browser repaint before next step
+                    guessVine.offsetHeight;  // force repaint before transitions
 
-                    // Fade in the red dashed marker line over 300ms
-                    setTimeout(function() { marker.style.opacity = '1'; }, 300);
+                    // ---- Phase 2+3: grow vine then play final audio ----
+                    // Called immediately for normal trials, or after intro_audio ends
+                    // for the special first trial.
+                    function growVineAndFinish() {
+                        setTimeout(function() { marker.style.opacity = '1'; }, 300);
+                        setTimeout(function() {
+                            trueVine.style.transition = 'clip-path 1200ms ease-out';
+                            trueVine.style.clipPath = 'inset(' + (100 - trueOutput) + '% 0 0 0)';
+                        }, 700);
+                        setTimeout(function() {
+                            playAudio(finalAudio);
+                            if (nextBtn) {
+                                nextBtn.style.display = 'inline-block';
+                                nextBtn.addEventListener('click', function() {
+                                    playAudio('assets/audio/button_click.mp3');
+                                });
+                            }
+                            window._lastResponsePct = null;
+                        }, 2200);
+                    }
 
-                    // ---- Phase 2: grow true vine from 0 to true_output ----
-                    // 700ms delay lets the participant register the marker first.
-                    setTimeout(function() {
-                        trueVine.style.transition = 'clip-path 1200ms ease-out';
-                        trueVine.style.clipPath = 'inset(' + (100 - trueOutput) + '% 0 0 0)';
-                    }, 700);
-
-                    // ---- Phase 3: play final audio + reveal next button ----
-                    // 2200ms = 700ms delay + 1200ms animation + 300ms buffer
-                    setTimeout(function() {
-                        playAudio(finalAudio);
-                        if (nextBtn) {
-                            nextBtn.style.display = 'inline-block';
-                            nextBtn.addEventListener('click', function() {
-                                // Do NOT call stopAllAudio() here — by the time this listener
-                                // fires, jsPsych's own click handler has already run on_finish
-                                // (which stops the current trial's audio) and started the next
-                                // trial's on_load (which plays fertilizer.mp3).  Calling
-                                // stopAllAudio() here would kill that sound immediately.
-                                playAudio('assets/audio/button_click.mp3');
-                            });
-                        }
-                        window._lastResponsePct = null;  // clear stash
-                    }, 2200);
+                    if (introAudio) {
+                        // First trial: play intro audio, then grow vine when it ends.
+                        var ia = playAudio(introAudio);
+                        ia.addEventListener('ended', growVineAndFinish);
+                        ia.addEventListener('error', growVineAndFinish);
+                    } else {
+                        growVineAndFinish();
+                    }
                 };
-            })(opts.true_output, opts.final_audio),
+            })(opts.true_output, opts.intro_audio || null, opts.final_audio),
 
             on_finish: function() { stopAllAudio(); }
         };
@@ -867,6 +870,7 @@ function buildResponseTrial(opts) {
             input_value:  FN.training.inputs[i],
             true_output:  FN.training.outputs[i],
             trial_index:  i + 1,
+            intro_audio:  (i === 0) ? 'assets/audio/Training_2.m4a' : null,
             final_audio:  (i === 0)
                           ? 'assets/audio/Training_3.m4a'
                           : 'assets/audio/Training_5.m4a'
