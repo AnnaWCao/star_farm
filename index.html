@@ -221,10 +221,11 @@ function buildResponseTrial(opts) {
                        '<img src="assets/images/ok_button.png"></button>';
             },
             data: {
-                task:        opts.task_label,
-                input_value: opts.input_value,
-                true_output: opts.true_output,
-                trial_index: opts.trial_index
+                task:            opts.task_label,
+                input_value:     opts.input_value,
+                true_output:     opts.true_output,
+                trial_index:     opts.trial_index,
+                canonical_index: opts.canonical_index !== undefined ? opts.canonical_index : null
             },
 
             on_load: function() {
@@ -928,13 +929,24 @@ function buildResponseTrial(opts) {
         on_finish: function() { stopAllAudio(); }
     });
 
-    for (var j = 0; j < FN.testing.inputs.length; j++) {
+    // Shuffle test trial order — Fisher-Yates, fresh random permutation per participant.
+    // canonical_index records which item from the functions.js list was shown (1-based),
+    // trial_index records the presentation position (1-based).
+    var testIndices = FN.testing.inputs.map(function(_, i) { return i; });
+    for (var k = testIndices.length - 1; k > 0; k--) {
+        var r = Math.floor(Math.random() * (k + 1));
+        var tmp = testIndices[k]; testIndices[k] = testIndices[r]; testIndices[r] = tmp;
+    }
+
+    for (var j = 0; j < testIndices.length; j++) {
+        var ci = testIndices[j];
         timeline.push(buildResponseTrial({
-            input_value:  FN.testing.inputs[j],
-            true_output:  FN.testing.outputs[j],
-            trial_index:  j + 1,
-            task_label:   'testing',
-            intro_audio:  'assets/audio/Training_4.m4a'
+            input_value:     FN.testing.inputs[ci],
+            true_output:     FN.testing.outputs[ci],
+            trial_index:     j + 1,
+            canonical_index: ci + 1,
+            task_label:      'testing',
+            intro_audio:     'assets/audio/Training_4.m4a'
         }));
     }
 
