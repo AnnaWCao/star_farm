@@ -496,14 +496,30 @@ function buildResponseTrial(opts) {
                             trueVine.style.clipPath = 'inset(' + (100 - trueOutput) + '% 0 0 0)';
                         }, 700);
                         setTimeout(function() {
-                            playAudio(finalAudio);
-                            if (nextBtn) {
-                                nextBtn.style.display = 'inline-block';
-                                nextBtn.addEventListener('click', function() {
-                                    playAudio('assets/audio/button_click.mp3');
-                                });
-                            }
+                            var audio = playAudio(finalAudio);
                             window._lastResponsePct = null;
+
+                            var revealed = false;
+                            function revealNextBtn() {
+                                if (revealed) return;
+                                revealed = true;
+                                if (nextBtn) {
+                                    nextBtn.style.display = 'inline-block';
+                                    nextBtn.addEventListener('click', function() {
+                                        playAudio('assets/audio/button_click.mp3');
+                                    });
+                                }
+                            }
+
+                            if (introAudio) {
+                                // First trial: final audio is Training_3 — not skippable,
+                                // next button appears only once it finishes playing.
+                                audio.addEventListener('ended', revealNextBtn);
+                                audio.addEventListener('error', revealNextBtn);
+                                setTimeout(revealNextBtn, 15000); // fallback
+                            } else {
+                                revealNextBtn();
+                            }
                         }, 2200);
                     }
 
