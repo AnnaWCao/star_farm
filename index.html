@@ -175,6 +175,55 @@ function runExperiment(pid, age, fnNum) {
                '<img src="assets/images/next_button.png"></button>';
     }
 
+    // buildAudioCheckpointTrial(audioSrc, taskLabel)
+    // Shows the training background and plays a non-skippable audio clip;
+    // the next button stays hidden until the audio finishes (or a 15s
+    // fallback fires, matching the testing-intro trial's pattern).
+    function buildAudioCheckpointTrial(audioSrc, taskLabel) {
+        return {
+            type: jsPsychHtmlButtonResponse,
+            stimulus: '<div class="stage">' +
+                      '<img class="stage-bg" src="' + TRAINING_BG + '"></div>',
+            choices: ['next'],
+            button_html: function() {
+                return '<button id="checkpoint-next-btn" class="jspsych-btn stage-btn" ' +
+                       'style="display:none;">' +
+                       '<img src="assets/images/next_button.png"></button>';
+            },
+            data: { task: taskLabel },
+            on_load: function() {
+                var stage  = document.querySelector('.stage');
+                var btnGrp = document.getElementById('jspsych-html-button-response-btngroup');
+                if (stage && btnGrp && btnGrp.parentElement !== stage) {
+                    stage.appendChild(btnGrp);
+                    btnGrp.style.position = 'static';
+                    btnGrp.style.margin   = '0';
+                }
+                var audio = playAudio(audioSrc);
+
+                var revealed = false;
+                function revealBtn() {
+                    if (revealed) return;
+                    revealed = true;
+                    var btn = document.getElementById('checkpoint-next-btn') ||
+                              document.querySelector('.stage button') ||
+                              document.querySelector('#jspsych-html-button-response-btngroup button');
+                    if (btn) {
+                        btn.style.display = 'inline-block';
+                        btn.addEventListener('click', function() {
+                            playAudio('assets/audio/button_click.mp3');
+                        });
+                    }
+                }
+                audio.addEventListener('ended', revealBtn);
+                audio.addEventListener('error', revealBtn);
+                // Hard fallback: if audio was stopped before ending, reveal after 15 s
+                setTimeout(revealBtn, 15000);
+            },
+            on_finish: function() { stopAllAudio(); }
+        };
+    }
+
 
 
 function buildResponseTrial(opts) {
@@ -495,10 +544,13 @@ function buildResponseTrial(opts) {
             'assets/audio/fertilizer.mp3',
             'assets/audio/Training_1.m4a',
             'assets/audio/Training_2.m4a',
-            'assets/audio/Training_3.m4a',
+            'assets/audio/Training_3.mp3',
             'assets/audio/Training_4.m4a',
             'assets/audio/Training_5.m4a',
-            'assets/audio/Training_6.m4a'
+            'assets/audio/Training_6.m4a',
+            'assets/audio/Training_7.m4a',
+            'assets/audio/Training_8.m4a',
+            'assets/audio/Training_9.m4a'
         ],
         video: [
             'assets/videos/CFL1_intro2.mp4',
@@ -873,9 +925,18 @@ function buildResponseTrial(opts) {
             trial_index:  i + 1,
             intro_audio:  (i === 0) ? 'assets/audio/Training_2.m4a' : null,
             final_audio:  (i === 0)
-                          ? 'assets/audio/Training_3.m4a'
+                          ? 'assets/audio/Training_3.mp3'
                           : 'assets/audio/Training_5.m4a'
         }));
+
+        // Checkpoint audios after the 6th, 12th, and 18th completed training trials.
+        if (i + 1 === 6) {
+            timeline.push(buildAudioCheckpointTrial('assets/audio/Training_7.m4a', 'training_checkpoint_7'));
+        } else if (i + 1 === 12) {
+            timeline.push(buildAudioCheckpointTrial('assets/audio/Training_8.m4a', 'training_checkpoint_8'));
+        } else if (i + 1 === 18) {
+            timeline.push(buildAudioCheckpointTrial('assets/audio/Training_9.m4a', 'training_checkpoint_9'));
+        }
     }
 
 
