@@ -274,7 +274,9 @@ function buildResponseTrial(opts) {
                 input_value:     opts.input_value,
                 true_output:     opts.true_output,
                 trial_index:     opts.trial_index,
-                canonical_index: opts.canonical_index !== undefined ? opts.canonical_index : null
+                canonical_index: opts.canonical_index !== undefined ? opts.canonical_index : null,
+                test_block:      opts.test_block      !== undefined ? opts.test_block      : null,
+                extrap_order:    opts.extrap_order    !== undefined ? opts.extrap_order    : null
             },
 
             on_load: function() {
@@ -566,7 +568,8 @@ function buildResponseTrial(opts) {
             'assets/audio/Training_6.m4a',
             'assets/audio/Training_7.m4a',
             'assets/audio/Training_8.m4a',
-            'assets/audio/Training_9.m4a'
+            'assets/audio/Testing_left.m4a',
+            'assets/audio/Testing_right.m4a'
         ],
         video: [
             'assets/videos/CFL1_intro2.mp4',
@@ -925,6 +928,9 @@ function buildResponseTrial(opts) {
     var FN = FUNCTIONS[fnNum];
     if (!FN) { console.error('No function definition for fnNum=' + fnNum); return; }
 
+    // 3 training blocks; checkpoint audios play between blocks (after block 1 and block 2).
+    var ptsPerBlock = Math.round(FN.training.inputs.length / 3);
+
     for (var i = 0; i < FN.training.inputs.length; i++) {
         timeline.push(buildResponseTrial({
             input_value:  FN.training.inputs[i],
@@ -945,13 +951,11 @@ function buildResponseTrial(opts) {
                           : 'assets/audio/Training_5.m4a'
         }));
 
-        // Checkpoint audios after the 6th, 12th, and 18th completed training trials.
-        if (i + 1 === 6) {
+        // Checkpoint audios after block 1 and block 2 (not after the final block).
+        if (i + 1 === ptsPerBlock) {
             timeline.push(buildAudioCheckpointTrial('assets/audio/Training_7.m4a', 'training_checkpoint_7'));
-        } else if (i + 1 === 12) {
+        } else if (i + 1 === 2 * ptsPerBlock) {
             timeline.push(buildAudioCheckpointTrial('assets/audio/Training_8.m4a', 'training_checkpoint_8'));
-        } else if (i + 1 === 18) {
-            timeline.push(buildAudioCheckpointTrial('assets/audio/Training_9.m4a', 'training_checkpoint_9'));
         }
     }
 
@@ -1006,26 +1010,61 @@ function buildResponseTrial(opts) {
         on_finish: function() { stopAllAudio(); }
     });
 
-    // Shuffle test trial order — Fisher-Yates, fresh random permutation per participant.
-    // canonical_index records which item from the functions.js list was shown (1-based),
-    // trial_index records the presentation position (1-based).
-    var testIndices = FN.testing.inputs.map(function(_, i) { return i; });
-    for (var k = testIndices.length - 1; k > 0; k--) {
-        var r = Math.floor(Math.random() * (k + 1));
-        var tmp = testIndices[k]; testIndices[k] = testIndices[r]; testIndices[r] = tmp;
+    // Partially-randomized testing order.
+    // functions.js indices: 0-2 = lower extrap [5,13,21], 3-5 = interp [30,50,70], 6-8 = upper extrap [79,87,95].
+    // Structure: interpolation block always first, then extrapolation blocks in 50/50-assigned order.
+    // canonical_index = 1-based position in FN.testing arrays; trial_index = presentation order across all test trials.
+
+    function fisherYates(arr) {
+        var a = arr.slice();
+        for (var k = a.length - 1; k > 0; k--) {
+            var r = Math.floor(Math.random() * (k + 1));
+            var tmp = a[k]; a[k] = a[r]; a[r] = tmp;
+        }
+        return a;
     }
 
-    for (var j = 0; j < testIndices.length; j++) {
-        var ci = testIndices[j];
-        timeline.push(buildResponseTrial({
-            input_value:     FN.testing.inputs[ci],
-            true_output:     FN.testing.outputs[ci],
-            trial_index:     j + 1,
-            canonical_index: ci + 1,
-            task_label:      'testing',
-            intro_audio:     'assets/audio/Training_4.m4a'
-        }));
+    var extrapOrder  = Math.random() < 0.5 ? 'lower_first' : 'upper_first';
+    var interpOrder  = fisherYates([3, 4, 5]);
+    var lowerOrder   = fisherYates([0, 1, 2]);
+    var upperOrder   = fisherYates([6, 7, 8]);
+
+    var testTrialNum = 0;
+    function pushTestBlock(indices, blockLabel) {
+        indices.forEach(function(ci) {
+            testTrialNum++;
+            timeline.push(buildResponseTrial({
+                input_value:     FN.testing.inputs[ci],
+                true_output:     FN.testing.outputs[ci],
+                trial_index:     testTrialNum,
+                canonical_index: ci + 1,
+                task_label:      'testing',
+                test_block:      blockLabel,
+                extrap_order:    extrapOrder,
+                intro_audio:     'assets/audio/Training_4.m4a'
+            }));
+        });
     }
+
+    var firstExtrap, secondExtrap;
+    if (extrapOrder === 'lower_first') {
+        firstExtrap  = { label: 'lower_extrap', indices: lowerOrder, audio: 'assets/audio/Testing_left.m4a' };
+        secondExtrap = { label: 'upper_extrap', indices: upperOrder, audio: 'assets/audio/Testing_right.m4a' };
+    } else {
+        firstExtrap  = { label: 'upper_extrap', indices: upperOrder, audio: 'assets/audio/Testing_right.m4a' };
+        secondExtrap = { label: 'lower_extrap', indices: lowerOrder, audio: 'assets/audio/Testing_left.m4a' };
+    }
+
+    // Block 1: interpolation (always first, no preceding checkpoint — Training_6.m4a above covers it)
+    pushTestBlock(interpOrder, 'interpolation');
+
+    // Block 2: first extrapolation block
+    timeline.push(buildAudioCheckpointTrial(firstExtrap.audio, 'testing_checkpoint_' + firstExtrap.label));
+    pushTestBlock(firstExtrap.indices, firstExtrap.label);
+
+    // Block 3: second extrapolation block
+    timeline.push(buildAudioCheckpointTrial(secondExtrap.audio, 'testing_checkpoint_' + secondExtrap.label));
+    pushTestBlock(secondExtrap.indices, secondExtrap.label);
 
 
     // ENDING
