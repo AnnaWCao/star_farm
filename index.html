@@ -1085,10 +1085,11 @@ function buildResponseTrial(opts) {
     action: "save",
     experiment_id: "0PFfezGea2Xb",
     filename: filename,
-    data_string: () => {
+    on_start: function() {
         jsPsych.data.addProperties({ study_completion_timestamp: new Date().toISOString() });
-        return jsPsych.data.get().csv();
-    }
+        jsPsych.data.get().localSave('csv', filename);
+    },
+    data_string: () => jsPsych.data.get().csv()
 };
 timeline.push(save_data);
 
