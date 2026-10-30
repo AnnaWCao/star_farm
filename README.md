@@ -1,8 +1,10 @@
 # Star Farm — Children's Function Learning Study
 
 Browser-based experiment hosted on GitHub Pages. Runs on iPad (touch), desktop
-(mouse), or any modern browser. Data saved as CSV downloaded to the device
-running the experiment.
+(mouse), or any modern browser. Data is uploaded to OSF via jsPsych DataPipe at
+the end of the session, and the ending page has an experimenter-tapped "Save
+data file" button for a local CSV copy (see "Data saving" below). Same
+pipeline as CFL2/baseball_duck.
 
 ## Deploying to GitHub Pages
 
@@ -28,10 +30,16 @@ account, or use a different static host like Netlify or Vercel (same workflow).
    - Sex (optional)
    - Experimenter notes (optional)
 3. Click "Start Session" → hand the device to the child.
-4. At session end, a CSV file is automatically downloaded to the device's
-   Downloads folder. Filename format:
-   `star-farm_p001_2026-04-20T15-30-00.csv`
-5. Click "Start Next Participant" to reload for the next child (or close).
+4. At session end, the ending page shows whether the OSF upload worked.
+   Tap **Save data file** (and Download, if Safari asks) for a local copy.
+   If the upload failed, tap **Retry OSF upload**. Filename is the random
+   10-character subject ID, e.g. `aB3dE7fG2h.csv`.
+5. Reload the page (or navigate back to the URL) to start the next child.
+   Any session that never reached OSF is listed at the top of the startup
+   form, with Upload / Download / Delete buttons.
+
+iPad checklist: Low Power Mode off, Auto-Lock off (or long), normal (not
+Private) Safari tab, don't switch apps during a session.
 
 ## iPad Setup Before First Session
 
@@ -123,16 +131,43 @@ Every CSV has one row per trial, with these columns (selected):
 Note: intro and transition trials don't have all these fields. Analyze by
 filtering on `task == 'training'` or `task == 'testing'`.
 
-## Crash Recovery
+## Data saving
 
-Every trial is also backed up to browser `localStorage` as it completes.
-If a session crashes before the final CSV downloads:
-1. On the same device, open Safari/Chrome dev tools (Settings → Safari →
-   Advanced → Web Inspector on iPad, then connect to Mac Safari).
-2. Navigate to Storage → Local Storage for the study domain.
-3. Copy the `trial_backup` key's value (JSON array).
-4. Manually convert to CSV using any online JSON-to-CSV tool, or ask a
-   collaborator to help parse it.
+All of this lives at the top of `index.html`'s `<script>` (`PIPE_EXPERIMENT_ID`,
+`uploadToDataPipe`, `downloadCSV`, the localStorage backup helpers) and in the
+"Data save" section at the end of `runExperiment()`. It is identical for all
+four functions.
+
+1. **OSF upload.** After the end video, the data is POSTed straight to the
+   DataPipe API (`PIPE_EXPERIMENT_ID`), uncompressed, with one retry if no
+   reply comes back, and a hard 20 s limit — the study always moves on to the
+   ending page. The result is recorded in the data (`task == 'save_upload'`:
+   `upload_ok`, `upload_status`, `upload_message`, `upload_attempts`).
+   `@jspsych-contrib/plugin-pipe` is no longer used: its 0.6.0 release
+   gzip-compresses uploads, which Safari 16.4–16.x corrupts above ~35 KB
+   (star_farm files were ~66 KB), and its request has no timeout.
+2. **Ending page.** Shows "Uploaded to OSF ✓" or the failure reason
+   (`timeout`, `network_error`, or DataPipe's error code such as
+   `DATA_COLLECTION_NOT_ACTIVE`). "Save data file" downloads the CSV — it's a
+   tap rather than automatic because iPad Safari blocks/prompts on downloads
+   that don't come from a tap. "Retry OSF upload" appears on failure.
+3. **Device backup.** After every trial the data so far is saved in the
+   browser's localStorage (`star_farm_backup_<subject_id>`), and removed
+   once the OSF upload succeeds. If the tab reloads mid-session or the upload
+   fails, the startup form lists the session for upload/download
+   (incomplete sessions save as `<subject_id>_partial.csv`).
+
+The `stimulus` column (each screen's full HTML) is dropped from all saved
+data. Every row also records `user_agent`, `touch_points` (>0 on iPad),
+`screen_size`, `viewport_at_start`, and `js_errors` (uncaught errors during
+the session).
+
+If OSF uploads fail, the ending page's reason tells you where to look. For
+DataPipe error codes, check the DataPipe dashboard: **"Enable data
+collection"** must be on, the OSF project must still be linked, no session
+limit reached, and the experiment ID in `index.html` must match. `timeout` /
+`network_error` point at the device's network (school Wi-Fi filters,
+captive portals, VPN/content blockers).
 
 ## What Needs To Be Added Before Running Participants
 
